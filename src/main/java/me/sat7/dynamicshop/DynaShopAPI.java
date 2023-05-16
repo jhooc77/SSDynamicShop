@@ -68,6 +68,10 @@ public final class DynaShopAPI {
     public static void openQuickSellGUI(Player player) {
         player.openInventory(new QuickSell().getGui(player));
     }
+    
+    public static void openQuickSellGUI(Player player, String shop) {
+        player.openInventory(new QuickSell().getGui(player, shop));
+    }
 
     // 유저 데이터를 다시 만들고 만들어졌는지 확인함.
     public static boolean recreateUserData(Player player) {

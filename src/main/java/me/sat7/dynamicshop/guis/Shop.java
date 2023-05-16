@@ -1,9 +1,7 @@
 package me.sat7.dynamicshop.guis;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
@@ -25,7 +23,12 @@ import me.sat7.dynamicshop.utilities.ShopUtil;
 
 public class Shop {
 
+    public static List<UUID> playerEditorToggle = new ArrayList<>();
+
     public Inventory getGui(Player player, String shopName, int page) {
+
+        if (playerEditorToggle.contains(player.getUniqueId()) && !player.isOp()) playerEditorToggle.remove(player.getUniqueId());
+
         DecimalFormat df = new DecimalFormat("0.00");
         // jobreborn 플러그인 있는지 확인.
         if(!JobsHook.jobsRebornActive && ShopUtil.ccShop.get().contains(shopName+".Options.flag.jobpoint"))
@@ -133,6 +136,21 @@ public class Shop {
         // 어드민이면 우클릭
         if(player.hasPermission("dshop.admin.shopedit")) infoLore.add(LangUtil.ccLang.get().getString("RMB_EDIT"));
 
+        // 어드민이면 설정창 토글 버튼
+        if(player.hasPermission("dshop.admin.shopedit")) {
+            if (playerEditorToggle.contains(player.getUniqueId())) {
+                ArrayList<String> lore = new ArrayList<>();
+                lore.add("상점 아이템을 구매 및 판매할 수 있게 됩니다");
+                lore.add("현재 상태: 켜짐");
+                inventory.setItem(52, ItemsUtil.createItemStack(Material.WHITE_STAINED_GLASS, null, "상점 아이템 에디터 끄기", lore, 1));
+            } else {
+                ArrayList<String> lore = new ArrayList<>();
+                lore.add("상점 아이템을 수정할 수 있게 됩니다");
+                lore.add("현재 상태: 꺼짐");
+                inventory.setItem(52, ItemsUtil.createItemStack(Material.LIGHT_GRAY_STAINED_GLASS, null, "상점 아이템 에디터 켜기", lore, 1));
+            }
+        }
+
         ItemStack infoBtn =  ItemsUtil.createItemStack(Material.OAK_SIGN,null, "§3"+shopName, infoLore,1);
         inventory.setItem(53,infoBtn);
 
@@ -213,18 +231,29 @@ public class Shop {
                     {
                         lore.add(LangUtil.ccLang.get().getString("STOCK") + stockStr);
                     }
-                    if(LangUtil.ccLang.get().getString("TRADE_LORE").length() > 0) lore.add(LangUtil.ccLang.get().getString("TRADE_LORE"));
 
-                    if(player.hasPermission("dshop.admin.shopedit"))
+                    if(player.hasPermission("dshop.admin.shopedit") && playerEditorToggle.contains(player.getUniqueId()))
                     {
+                        lore.add("§e우클릭: 모드변경 - 현재: " + (tradeType.equalsIgnoreCase("default")?"구매+판매":(tradeType.equalsIgnoreCase("BuyOnly")?"판매전용":"구매전용")));
                         lore.add(LangUtil.ccLang.get().getString("ITEM_MOVE_LORE"));
                         lore.add(LangUtil.ccLang.get().getString("ITEM_EDIT_LORE"));
+                    } else {
+                        if(!tradeType.equalsIgnoreCase("SellOnly")) {
+                            lore.add("");
+                            lore.add("§e좌클릭: 1개 구매");
+                            lore.add("§e쉬프트+좌클릭: 64개 구매");
+                        }
+                        if(!tradeType.equalsIgnoreCase("BuyOnly")) {
+                            lore.add("");
+                            lore.add("§e우클릭: 1개 판매");
+                            lore.add("§e쉬프트+우클릭: 전부 판매");
+                        }
                     }
                 }
                 // 장식용
                 else
                 {
-                    if(player.hasPermission("dshop.admin.shopedit"))
+                    if(player.hasPermission("dshop.admin.shopedit") && playerEditorToggle.contains(player.getUniqueId()))
                     {
                         lore.add(LangUtil.ccLang.get().getString("ITEM_COPY_LORE"));
                         lore.add(LangUtil.ccLang.get().getString("DECO_DELETE_LORE"));

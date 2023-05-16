@@ -11,4 +11,8 @@ public class QuickSell {
     public Inventory getGui(Player player) {
         return Bukkit.createInventory(player,9, LangUtil.ccLang.get().getString("QUICKSELL_TITLE"));
     }
+    
+    public Inventory getGui(Player player, String shop) {
+        return Bukkit.createInventory(player,9, LangUtil.ccLang.get().getString("QUICKSELL_TITLE") + " " + shop);
+    }
 }

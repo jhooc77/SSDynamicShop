@@ -81,7 +81,7 @@ public final class TabCompleteUtil {
                         if(s.startsWith(args[0])) alist.add(s);
                     }
                 }
-                else if(args.length >= 2 && args[0].equals("shop"))
+                else if(args.length >= 2 && (args[0].equals("shop")))
                 {
                     if(args.length == 2)
                     {
@@ -625,6 +625,25 @@ public final class TabCompleteUtil {
                     {
                         config.set("tmpString","openshop");
                         Help.showHelp("openshop",(Player)sender,args);
+                    }
+                }
+                else if (args[0].equalsIgnoreCase("qsell") && sender.hasPermission("dshop.use.qsell"))
+                {
+                	if (args.length == 2)
+                    {
+                        temp.addAll(ShopUtil.ccShop.get().getKeys(false));
+
+                        for (String s:temp)
+                        {
+                            if(s.startsWith(args[args.length-1])) alist.add(s);
+                        }
+                    } else if (args.length == 3) {
+                        temp.addAll(Bukkit.getOnlinePlayers().stream().map(HumanEntity::getName).collect(Collectors.toList()));
+
+                        for (String s:temp)
+                        {
+                            if(s.startsWith(args[args.length-1])) alist.add(s);
+                        }
                     }
                 }
                 else if(args[0].equalsIgnoreCase("renameshop") && sender.hasPermission("dshop.admin.renameshop"))

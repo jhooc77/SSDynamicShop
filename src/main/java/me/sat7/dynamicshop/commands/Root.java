@@ -4,6 +4,7 @@ import me.sat7.dynamicshop.DynaShopAPI;
 import me.sat7.dynamicshop.DynamicShop;
 import me.sat7.dynamicshop.constants.Constants;
 import me.sat7.dynamicshop.utilities.LangUtil;
+import me.sat7.dynamicshop.utilities.ShopUtil;
 
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
@@ -18,6 +19,10 @@ public class Root implements CommandExecutor {
     {
         if(!(sender instanceof Player))
         {
+            if (args.length == 0) {
+                DynamicShop.console.sendMessage(Constants.DYNAMIC_SHOP_PREFIX + " You can't run this command in console");
+                return true;
+            }
             if (!args[0].equalsIgnoreCase("openshop")) {
                 DynamicShop.console.sendMessage(Constants.DYNAMIC_SHOP_PREFIX + " You can't run this command in console");
                 return true;
@@ -71,7 +76,16 @@ public class Root implements CommandExecutor {
         else if(args[0].equalsIgnoreCase("qsell"))
         {
             if (sender.hasPermission(Constants.USE_QSELL_PERMISSION)) {
-                DynaShopAPI.openQuickSellGUI(player);
+            	if (args.length > 1) {
+                    if(!ShopUtil.ccShop.get().contains(args[1]))
+                    {
+                        player.sendMessage(DynamicShop.dsPrefix + LangUtil.ccLang.get().getString("ERR.SHOP_NOT_FOUND"));
+                        return true;
+                    }
+            		DynaShopAPI.openQuickSellGUI(player, args[1]);
+            	} else {
+                    DynaShopAPI.openQuickSellGUI(player);
+            	}
             }
             return true;
         }

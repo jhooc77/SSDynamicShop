@@ -2,6 +2,7 @@ package me.sat7.dynamicshop.events;
 
 import me.sat7.dynamicshop.DynaShopAPI;
 import me.sat7.dynamicshop.DynamicShop;
+import me.sat7.dynamicshop.guis.Shop;
 import me.sat7.dynamicshop.guis.StartPage;
 import me.sat7.dynamicshop.jobshook.JobsHook;
 import me.sat7.dynamicshop.transactions.Calc;
@@ -327,6 +328,12 @@ public class OnClick implements Listener {
                         DynaShopAPI.openShopSettingGui(player, shopName);
                         return;
                     }
+                    else if(e.getSlot() == 52 && player.hasPermission("dshop.admin.shopedit"))
+                    {
+                        if (Shop.playerEditorToggle.contains(player.getUniqueId())) Shop.playerEditorToggle.remove(player.getUniqueId());
+                        else Shop.playerEditorToggle.add(player.getUniqueId());
+                        DynaShopAPI.openShopGui(player, shopName, curPage);
+                    }
                     else if(e.getSlot()>45)
                     {
                         return;
@@ -337,13 +344,64 @@ public class OnClick implements Listener {
                         int idx = e.getSlot() + (45 * (curPage - 1));
 
                         // 거래화면 열기
-                        if(e.isLeftClick())
+                        if(!Shop.playerEditorToggle.contains(player.getUniqueId()))
                         {
                             if(!ShopUtil.ccShop.get().contains(shopName+"."+idx+".value")) return; // 장식용 버튼임
 
-                            SoundUtil.playerSoundEffect(player,"tradeview");
-                            DynaShopAPI.openItemTradeGui(player,shopName, String.valueOf(idx));
-                            config.set("interactItem",shopName + "/" + idx); // 선택한 아이탬의 인덱스 저장
+                            ItemStack tempIS = new ItemStack(e.getCurrentItem().getType());
+                            tempIS.setItemMeta((ItemMeta) ShopUtil.ccShop.get().get(shopName + "." + idx + ".itemStack"));
+
+                            boolean infiniteStock = false;
+                            // 무한재고&고정가격
+                            if(ShopUtil.ccShop.get().getInt(shopName+"." + idx + ".stock") <= 0)
+                            {
+                                infiniteStock = true;
+                            }
+                            ConfigurationSection optionS = ShopUtil.ccShop.get().getConfigurationSection(shopName).getConfigurationSection("Options");
+                            if(optionS.contains("flag.jobpoint")) {
+                                if (e.isLeftClick()) {
+                                    if (e.isShiftClick()) {
+                                        tempIS.setAmount(64);
+                                        Buy.buyItemJobPoint(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    } else {
+                                        tempIS.setAmount(1);
+                                        Buy.buyItemJobPoint(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    }
+                                } else if (e.isRightClick()) {
+                                    if (e.isShiftClick()) {
+                                        tempIS.setAmount(2304);
+                                        Sell.sellItemJobPoint(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    } else {
+                                        tempIS.setAmount(1);
+                                        Sell.sellItemJobPoint(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    }
+                                }
+                            } else {
+                                if (e.isLeftClick()) {
+                                    if (e.isShiftClick()) {
+                                        tempIS.setAmount(64);
+                                        Buy.buyItemCash(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    } else {
+                                        tempIS.setAmount(1);
+                                        Buy.buyItemCash(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    }
+                                } else if (e.isRightClick()) {
+                                    if (e.isShiftClick()) {
+                                        tempIS.setAmount(2304);
+                                        Sell.sellItemCash(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    } else {
+                                        tempIS.setAmount(1);
+                                        Sell.sellItemCash(player, shopName, Integer.toString(idx), tempIS, 0, 0, infiniteStock);
+                                    }
+                                }
+                            }
+
+                            DynaShopAPI.openShopGui(player, shopName, curPage);
+
+
+                            //SoundUtil.playerSoundEffect(player,"tradeview");
+                            //DynaShopAPI.openItemTradeGui(player,shopName, String.valueOf(idx));
+                            //config.set("interactItem",shopName + "/" + idx); // 선택한 아이탬의 인덱스 저장
                         }
                         // 아이탬 이동, 수정, 또는 장식탬 삭제
                         else if(player.hasPermission("dshop.admin.shopedit"))
@@ -351,7 +409,18 @@ public class OnClick implements Listener {
                             SoundUtil.playerSoundEffect(player,"click");
 
                             config.set("interactItem",shopName + "/" + idx); // 선택한 아이탬의 인덱스 저장
-                            if(e.isShiftClick())
+                            if(e.isLeftClick()) {
+                                String tradeType = "default";
+                                if(ShopUtil.ccShop.get().contains(shopName+"."+idx+".tradeType")) tradeType = ShopUtil.ccShop.get().getString(shopName+"."+idx+".tradeType");
+                                if (tradeType.equalsIgnoreCase("default")){
+                                    ShopUtil.ccShop.get().set(shopName+"."+idx+".tradeType", "BuyOnly");
+                                } else if (tradeType.equalsIgnoreCase("BuyOnly")){
+                                    ShopUtil.ccShop.get().set(shopName+"."+idx+".tradeType", "SellOnly");
+                                } else if (tradeType.equalsIgnoreCase("SellOnly")){
+                                    ShopUtil.ccShop.get().set(shopName+"."+idx+".tradeType", null);
+                                }
+                                DynaShopAPI.openShopGui(player, shopName, curPage);
+                            } else if(e.isShiftClick())
                             {
                                 if(ShopUtil.ccShop.get().contains(shopName+"."+idx+".value"))
                                 {
@@ -1525,6 +1594,67 @@ public class OnClick implements Listener {
             else
             {
                 player.sendMessage(DynamicShop.dsPrefix + LangUtil.ccLang.get().getString("QSELL_NA")+topShopName);
+            }
+        } else if (e.getView().getTitle().startsWith(LangUtil.ccLang.get().getString("QUICKSELL_TITLE"))) {
+        	e.setCancelled(true);
+
+            if(e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR)
+            {
+                return;
+            }
+
+            String topShopName = null;
+            double topPrice = -1;
+            int tradeIdx = -1;
+            
+            String shop = e.getView().getTitle().substring(LangUtil.ccLang.get().getString("QUICKSELL_TITLE").length()+1);
+            if (!ShopUtil.ccShop.get().contains(shop)) return;
+            ConfigurationSection shopConf = ShopUtil.ccShop.get().getConfigurationSection(shop);
+
+            // 권한 없는 상점
+            String permission = shopConf.getString("Options.permission");
+            if(permission != null && permission.length()>0 && !player.hasPermission(permission) && !player.hasPermission(permission+".sell"))
+            {
+                return;
+            }
+
+            // 표지판 전용 상점, 지역상점, 잡포인트 상점
+            if(shopConf.contains("Options.flag.localshop") || shopConf.contains("Options.flag.signshop") || shopConf.contains("Options.flag.jobpoint")) return;
+
+            int sameItemIdx = ShopUtil.findItemFromShop(shop,e.getCurrentItem());
+
+            if(sameItemIdx != -1)
+            {
+                String tradeType = shopConf.getString(sameItemIdx+".tradeType");
+                if(tradeType != null && tradeType.equals("BuyOnly")) return; // 구매만 가능함
+
+                // 상점에 돈이 없음
+                if(ShopUtil.getShopBalance(shop) != -1 && ShopUtil.getShopBalance(shop) < Calc.calcTotalCost(shop,String.valueOf(sameItemIdx),e.getCurrentItem().getAmount()))
+                {
+                    return;
+                }
+
+                double value = shopConf.getDouble(sameItemIdx+".value");
+
+                int tax = ConfigUtil.getCurrentTax();
+                if(shopConf.contains("Options.SalesTax"))
+                {
+                    tax = shopConf.getInt("Options.SalesTax");
+                }
+
+                if(topPrice <  value - ((value / 100) * tax))
+                {
+                    player.sendMessage("check");
+                    topShopName = shop;
+                    topPrice = shopConf.getDouble(sameItemIdx+".value");
+                    tradeIdx = sameItemIdx;
+                }
+            }
+
+            if(topShopName != null)
+            {
+                // 찾은 상점에 판매
+                Sell.quickSellItem(player,e.getCurrentItem(),topShopName,tradeIdx,e.isShiftClick(),e.getSlot());
             }
         }
         // Shift클릭으로 UI인벤에 아이탬 올리는것 막기

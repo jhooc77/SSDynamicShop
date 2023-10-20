@@ -157,7 +157,7 @@ public final class Buy
         }
 
         int leftAmount = tradeAmount;
-        int maxStackSize = itemStack.getType().getMaxStackSize();
+        int maxStackSize = 64;
         while (leftAmount > 0)
         {
             int giveAmount = maxStackSize;

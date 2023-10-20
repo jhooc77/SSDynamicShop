@@ -421,11 +421,11 @@ public final class ItemTrade extends InGameUI
 
             idx++;
 
-            if(itemStack.getMaxStackSize() <= 1)
+            /*if(itemStack.getMaxStackSize() <= 1)
             {
                 amount++;
             }
-            else
+            else*/
             {
                 amount = amount * 2;
             }

@@ -630,6 +630,7 @@ public final class Shop extends InGameUI
                 // 빠른 거래
                 if (e.getClick() == ClickType.DOUBLE_CLICK) return;
                 if (!e.isLeftClick() && !e.isRightClick()) return;
+                if (!shopData.contains(idx + ".value")) return;
                 if(!CheckShopIsEnable())
                     return;
                 int deliveryCharge = ShopUtil.CalcShipping(shopName, player);

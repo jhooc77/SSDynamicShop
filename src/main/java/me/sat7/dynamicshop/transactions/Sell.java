@@ -2,6 +2,8 @@ package me.sat7.dynamicshop.transactions;
 
 import java.util.Map;
 
+import kr.awonline.jobs.AWJobLoader;
+import kr.awonline.jobs.organization.Organization;
 import me.sat7.dynamicshop.constants.Constants;
 import me.sat7.dynamicshop.economyhook.PlayerpointHook;
 import me.sat7.dynamicshop.events.ShopBuySellEvent;
@@ -97,12 +99,20 @@ public final class Sell
         double[] calcResult = Calc.calcTotalCost(shopName, String.valueOf(tradeIdx), -tradeAmount);
         priceSum += calcResult[0];
 
+        double ratio = AWJobLoader.getInstance().getOrganizationManager().getGroupMetadata().getDouble("정부.tax.부가세");
+        double aTax = (ratio/100)*priceSum;
+        priceSum -= aTax;
+
         // 계산된 비용에 대한 처리 시도
         Economy econ = DynamicShop.getEconomy();
         if (!CheckTransactionSuccess(currencyType, player, priceSum))
         {
             DynamicShop.PrintConsoleDbgLog("QSellFail-Transaction failed. player:" + player + " itemType:" + itemStack.getType() + " shopName:" + shopName + " tradeIdx:" + tradeIdx);
             return 0;
+        }
+        Organization organization = AWJobLoader.getInstance().getOrganizationManager().getOrganization("정부");
+        if (organization != null) {
+            organization.addMoney(aTax, player != null ? player.getName() : "???", "부가세-판매");
         }
 
         // 플레이어 인벤토리에서 아이템 제거
@@ -264,10 +274,19 @@ public final class Sell
         double[] calcResult = Calc.calcTotalCost(shopName, tradeIdx, -tradeAmount);
         priceSum += calcResult[0];
 
+        double ratio = AWJobLoader.getInstance().getOrganizationManager().getGroupMetadata().getDouble("정부.tax.부가세");
+        double aTax = (ratio/100)*priceSum;
+        priceSum -= aTax;
+
         // 계산된 비용에 대한 처리 시도
         Economy econ = DynamicShop.getEconomy();
         if (!CheckTransactionSuccess(currency, player, priceSum))
             return;
+
+        Organization organization = AWJobLoader.getInstance().getOrganizationManager().getOrganization("정부");
+        if (organization != null) {
+            organization.addMoney(aTax, player.getName(), "부가세-판매");
+        }
 
         // 플레이어 인벤토리에서 아이템 제거
         ItemStack delete = new ItemStack(itemStack);

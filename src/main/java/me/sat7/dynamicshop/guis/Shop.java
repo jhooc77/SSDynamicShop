@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import kr.awonline.jobs.AWJobLoader;
 import me.sat7.dynamicshop.DynaShopAPI;
 import me.sat7.dynamicshop.constants.Constants;
 import me.sat7.dynamicshop.economyhook.PlayerpointHook;
@@ -252,6 +253,9 @@ public final class Shop extends InGameUI
                 {
                     buyText = t(player, "SHOP.BUY_PRICE" + currencyKey).replace("{num}", n(buyPrice,isIntTypeCurrency));
                 }
+                double ratio = AWJobLoader.getInstance().getOrganizationManager().getGroupMetadata().getDouble("정부.tax.부가세");
+                double aTax = (ratio/100)*buyPrice;
+                buyText += " §7§o부가세 +" + n(aTax, false) + "(" + ratio + "%)" + "§r";
                 buyText += showValueChange ? " " + valueChanged_Buy : "";
             }
 
@@ -267,6 +271,9 @@ public final class Shop extends InGameUI
                     sellText = t(player, "SHOP.SELL_PRICE" + currencyKey).replace("{num}", n(sellPrice,isIntTypeCurrency));
                 }
 
+                double ratio = AWJobLoader.getInstance().getOrganizationManager().getGroupMetadata().getDouble("정부.tax.부가세");
+                double aTax = (ratio/100)*sellPrice;
+                sellText += " §7§o부가세 -" + n(aTax, false) + "(" + ratio + "%)" + "§r";
                 sellText += showValueChange ? " " + valueChanged_Sell : "";
             }
 

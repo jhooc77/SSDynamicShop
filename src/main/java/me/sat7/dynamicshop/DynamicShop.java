@@ -1,5 +1,10 @@
 package me.sat7.dynamicshop;
 
+import fr.skytasul.quests.api.QuestsAPI;
+import fr.skytasul.quests.api.comparison.ItemComparisonMap;
+import fr.skytasul.quests.api.gui.ItemUtils;
+import fr.skytasul.quests.api.stages.StageType;
+import fr.skytasul.quests.api.utils.XMaterial;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.pikamug.localelib.LocaleManager;
 import me.sat7.dynamicshop.commands.CMDManager;
@@ -17,6 +22,7 @@ import me.sat7.dynamicshop.files.CustomConfig;
 import me.sat7.dynamicshop.guis.QuickSell;
 import me.sat7.dynamicshop.guis.StartPage;
 import me.sat7.dynamicshop.guis.UIManager;
+import me.sat7.dynamicshop.quests.stages.ShopStage;
 import me.sat7.dynamicshop.utilities.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -28,11 +34,13 @@ import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.PlayerPointsAPI;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -178,6 +186,11 @@ public final class DynamicShop extends JavaPlugin implements Listener
     {
         plugin = this;
         console = plugin.getServer().getConsoleSender();
+
+
+        QuestsAPI.getAPI().getStages().register(new StageType<ShopStage>("dynshop", ShopStage.class, "dynshop", (section, controller) -> {
+            return new ShopStage(controller, section.getString("shopName"), section.contains("itemStack")? ItemStack.deserialize(section.getConfigurationSection("itemStack").getValues(false)):null, section.getInt("amount"), section.contains("itemComparisons") ? new ItemComparisonMap(section.getConfigurationSection("itemComparisons")) : new ItemComparisonMap(), section.getInt("buy"));
+        }, ItemUtils.item(XMaterial.GOLD_NUGGET, "§a거래하기", "§eDynshop 거래하기"), ShopStage.Creator::new));
 
         SetupVault();
     }

@@ -1,5 +1,7 @@
 package me.sat7.dynamicshop.transactions;
 
+import kr.awonline.jobs.AWJobLoader;
+import kr.awonline.jobs.organization.Organization;
 import me.sat7.dynamicshop.DynaShopAPI;
 import me.sat7.dynamicshop.DynamicShop;
 import me.sat7.dynamicshop.constants.Constants;
@@ -63,6 +65,8 @@ public final class Buy
         int tradeLimitPerPlayer = ShopUtil.GetBuyLimitPerPlayer(shopName, tradeIdxInt);
         int playerTradingVolume = UserUtil.GetPlayerTradingVolume(player, shopName, HashUtil.GetItemHash(itemStack));
 
+        double ratio = AWJobLoader.getInstance().getOrganizationManager().getGroupMetadata().getDouble("정부.tax.부가세");
+        double totalTax = 0;
         for (int i = 0; i < itemStack.getAmount(); i++)
         {
             if (tradeLimitPerPlayer > 0 && tradeLimitPerPlayer <= playerTradingVolume + tradeAmount)
@@ -79,10 +83,17 @@ public final class Buy
                 break;
 
             double price = Calc.getCurrentPrice(shopName, tradeIdx, true, true);
-            if (priceSum + price > playerBalance)
+            double aTax = 0;
+            if (currency.equalsIgnoreCase(Constants.S_VAULT)) {
+                aTax = (ratio/100)*price;
+            }
+
+            if (priceSum + price + aTax> playerBalance)
                 break;
 
             priceSum += price;
+            priceSum += aTax;
+            totalTax += aTax;
 
             if (!infiniteStock)
             {
@@ -153,6 +164,11 @@ public final class Buy
             {
                 player.sendMessage(String.format("An error occured: %s", r.errorMessage));
                 return;
+            }
+
+            Organization organization = AWJobLoader.getInstance().getOrganizationManager().getOrganization("정부");
+            if (organization != null) {
+                organization.addMoney(totalTax, player.getName(), "부가세-구매");
             }
         }
 
